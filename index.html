@@ -71,6 +71,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 .dayhead .rel{font-size:12px;font-weight:700;color:var(--brand);text-transform:uppercase;letter-spacing:.06em}
 .dayhead .n{margin-left:auto;color:var(--muted);font-size:13px}
 .day.past{opacity:.6}
+.day.free{margin-bottom:12px}.day.free .dayhead{border-bottom:1px dashed var(--line,#444);margin-bottom:0}.day.free h2{font-size:16px;opacity:.7}
 .visit{display:grid;grid-template-columns:118px minmax(0,1fr) auto;gap:14px;align-items:start;background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--prio,var(--line));border-radius:10px;padding:14px;margin-bottom:10px;box-shadow:var(--shadow);animation:in .25s ease both}
 @keyframes in{from{transform:translateY(4px)}to{transform:none}}
 @media (prefers-reduced-motion:reduce){.visit{animation:none}}
@@ -163,7 +164,7 @@ footer{padding-block:24px 36px;color:var(--muted);font-size:12px}
 <script>
 // ======== CONFIGURACIÓN ========
 // Pega aquí la URL de tu aplicación web de Apps Script (termina en /exec):
-const API_URL = "https://script.google.com/macros/s/AKfycby1FOcjnbl_0xwcK8x3C4iC0mzAk9UChBhydYKbZZC5YdI-pwDs0BKVzw1d9lYy4vjEsA/exec";
+const API_URL = "PEGA_AQUI_TU_URL_DE_APPS_SCRIPT";
 // ===============================
 const CIERRE = new Date("2026-10-30T23:59:00-05:00");
 const DIAS = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
@@ -229,8 +230,11 @@ function renderAgenda(){
   if(!visitas.length){el.innerHTML=`<div class="empty"><b>Aún no hay visitas programadas.</b><br>Activa la edición y usa «+ Nueva visita».</div>`;return;}
   if(!list.length){el.innerHTML=`<div class="empty">Ninguna visita coincide con los filtros.</div>`;return;}
   const groups={}; list.forEach(v=>{(groups[v.fecha||"sin-fecha"] ||= []).push(v);});
-  const keys=Object.keys(groups).sort((a,b)=>a==="sin-fecha"?1:b==="sin-fecha"?-1:a.localeCompare(b)), t=todayStr();
+  const t=todayStr(), fin=CIERRE.toLocaleDateString("en-CA",{timeZone:"America/Lima"});
+  if(!fr&&!fp){for(let d=new Date(t+"T12:00");;d.setDate(d.getDate()+1)){const k=d.toLocaleDateString("en-CA");if(k>fin)break;if(d.getDay()!==0)groups[k] ||= [];}}
+  const keys=Object.keys(groups).sort((a,b)=>a==="sin-fecha"?1:b==="sin-fecha"?-1:a.localeCompare(b));
   el.innerHTML=keys.map(k=>{
+    if(!groups[k].length){const ti=new Date(k+"T00:00").toLocaleDateString("es-PE",{weekday:"long",day:"numeric",month:"long"}),r=relDay(k);return `<section class="day free"><div class="dayhead"><h2>${esc(ti)}</h2>${r?`<span class="rel">${r}</span>`:""}<span class="n">Sin visitas</span></div></section>`;}
     const vs=groups[k].sort((a,b)=>(a.hora||"99").localeCompare(b.hora||"99"));
     const title=k==="sin-fecha"?"Fecha por definir":new Date(k+"T00:00").toLocaleDateString("es-PE",{weekday:"long",day:"numeric",month:"long"});
     const rel=k==="sin-fecha"?"":relDay(k);
